@@ -1,0 +1,7 @@
+{
+  "cartItem": {
+    "sku": "MJ01-XS-Blue", 
+    "qty": 1,
+    "quote_id": "your_cart_id"
+  }
+}
