@@ -12,6 +12,9 @@ const sql = require('../utils/sqlqueries');
 const fs = require('fs');
 const path = require('path');
 const { validateOrder } = require('../utils/apiHelper');
+const MESSAGES = require('../constants/messages');
+const StatusCodes = require('../constants/statusCodes');
+
 
 
 describe('Magento Jacket Purchase Flow', () => {
@@ -50,6 +53,9 @@ describe('Magento Jacket Purchase Flow', () => {
 
         const orderId = await confirmationPage.getOrderId();
         expect(orderId).toBeDefined();
+
+        const heading = await confirmationPage.getConfirmationHeading();
+        expect(heading).toContain(MESSAGES.success.purchaseSuccess);
     });
 
     it('should validate order via API after placement', async () => {
@@ -58,7 +64,7 @@ describe('Magento Jacket Purchase Flow', () => {
         const response = await axios.get(`https://magento.softwaretestingboard.com/rest/V1/orders/${orderId}`);
 
 
-        expect(response.status).toBe(200);
+        expect(response.status).toBe(StatusCodes.OK);
         expect(response.data.status).toBe("processing");
         // const orderResponse = await validateOrder(orderId);
 

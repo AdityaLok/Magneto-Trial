@@ -7,6 +7,8 @@ const { loginCustomer } = require('../utils/apiHelper');
 const path = require('path');
 const fs = require('fs');
 const { clearResponse } = require('../utils/clearResponse');
+const MESSAGES = require('../constants/messages');
+const StatusCodes = require('../constants/statusCodes');
 
 describe('Magento Registration and Login for New user', () => {
     const payloadPath = path.resolve(__dirname, '../data/loginPayload.json');
@@ -17,19 +19,19 @@ describe('Magento Registration and Login for New user', () => {
     })
 
     it('should register a new customer user and save to DB', async () => {
-        const newUser = await generateAndSaveNewUser('customer');
+        let newUser = await generateAndSaveNewUser('customer');
 
         await registerPage.open();
         await registerPage.registerNewUser(newUser);
 
-        const isUserRegistrationSuccess = await registerPage.isSuccessMessageDisplayed();
+        let isUserRegistrationSuccess = await registerPage.isSuccessMessageDisplayed();
         expect(isUserRegistrationSuccess).toBeTrue();
     });
 
     it('should login again with same customer user from DB and validate login API', async () => {
         await dashboardPage.logout();
 
-        const user = await fetchUserData('customer');
+        let user = await fetchUserData('customer');
         expect(user).not.toBeNull();
         expect(user.email).toBeDefined();
         expect(user.password).toBeDefined();
@@ -38,25 +40,25 @@ describe('Magento Registration and Login for New user', () => {
         await loginPage.login(user.email, user.password);
 
         // Update login payload file dynamically
-        const loginPayload = {
+        let loginPayload = {
             username: user.email,
             password:user.password
         };
         
         fs.writeFileSync(payloadPath, JSON.stringify(loginPayload, null, 2));
 
-        const apiResponse = await loginCustomer();
+        let apiResponse = await loginCustomer();
 
-        expect(apiResponse.status).toBe(200);
+        expect(apiResponse.status).toBe(StatusCodes.OK);
         expect(apiResponse.data).toMatch(/^[A-Za-z0-9._-]+$/);
 
         // Validate payload content
-        const payloadFromFile = JSON.parse(fs.readFileSync(payloadPath, 'utf-8'));
+        let payloadFromFile = JSON.parse(fs.readFileSync(payloadPath, 'utf-8'));
         expect(payloadFromFile.username).toEqual(user.email);
         expect(payloadFromFile.password).toEqual(user.password);
 
-        const title = await dashboardPage.getHeadingText();
-        expect(title).toContain('My Account');
+        let title = await dashboardPage.getHeadingText();
+        expect(title).toContain(MESSAGES.labels.dashboardTitle);
 
     });
 });

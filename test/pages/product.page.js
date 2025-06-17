@@ -1,3 +1,6 @@
+const TIMEOUTS = require('../constants/timeouts');
+const MESSAGES = require('../constants/messages');
+ 
  class ProductPage {
     get sizeOptions() {
         return $$('//div[contains(@class,"swatch-attribute size")]//div[@option-label]');
@@ -11,38 +14,67 @@
         return $('#product-addtocart-button');
     }
 
-    get addToCartSuccessMessage() {
+    get cartSuccessMessage() {
         return $('.message-success.success.message');
     }
 
     async selectRandomSizeAndColor() {
-        const sizes = await this.sizeOptions;
-        const colors = await this.colorOptions;
+        let sizes = await this.sizeOptions;
+        if (sizes.length === 0) throw new Error('No size options found.');
+        let randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+        await randomSize.scrollIntoView();
+        await browser.waitUntil(async () => {
+            return await randomSize.isClickable();
+        },{
+            timeout: TIMEOUTS.wait.medium,
+            timeoutMsg: MESSAGES.timeouts.sizeNotClickable
 
-        if (sizes.length === 0 || colors.length === 0) {
-            throw new Error('No size or color options available on product page.');
-        }
+        })
+        // await this.randomSize.waitUntil(async function () {
+        //     return await this.isClickable();
+        // },{
+        //     timeout: TIMEOUTS.wait.medium,
+        //     timeoutMsg: MESSAGES.timeouts.sizeNotClickable
+        // });
+        await randomSize.click();
 
-        const size = sizes[Math.floor(Math.random() * sizes.length)];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-
-        await size.scrollIntoView();
-        await size.waitForClickable({ timeout: 5000 });
-        await size.click();
-
-        await color.scrollIntoView();
-        await color.waitForClickable({ timeout: 5000 });
-        await color.click();
+        let colors = await this.colorOptions;
+        if (colors.length === 0) throw new Error('No color options found.');
+        let randomColor = colors[Math.floor(Math.random() * colors.length)];
+        await randomColor.scrollIntoView();
+        await browser.waitUntil(async () => {
+            return await randomColor.isClickable();
+        }, {
+            timeout: TIMEOUTS.medium,
+            timeoutMsg: MESSAGES.timeouts.colorNotClickable
+        });
+        // await this.randomColor.waitUntil(async function () {
+        //     return await this.isClickable();
+        // }, {
+        //     timeout: TIMEOUTS.medium,
+        //     timeoutMsg: MESSAGES.timeouts.colorNotClickable
+        // });
+        await randomColor.click();
     }
 
     async addProductToCart() {
         await this.selectRandomSizeAndColor();
 
         await this.addToCartButton.scrollIntoView();
-        await this.addToCartButton.waitForClickable({ timeout: 5000 });
+        await browser.waitUntil(async() => {
+            return await this.addToCartButton.isClickable();
+        }, {
+            timeout: TIMEOUTS.medium,
+            timeoutMsg: MESSAGES.timeouts.addToCartNotClickable
+        });
         await this.addToCartButton.click();
 
-        await this.addToCartSuccessMessage.waitForDisplayed({ timeout: 10000 });
+        await browser.waitUntil(async () => {
+            return await this.cartSuccessMessage.isDisplayed();
+        }, {
+            timeout: TIMEOUTS.wait.addToCartSuccessMessage,
+            timeoutMsg: MESSAGES.error.productNotAdded
+        });
     }
 }
 

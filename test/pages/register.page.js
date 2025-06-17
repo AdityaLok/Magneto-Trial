@@ -1,3 +1,7 @@
+const TIMEOUTS = require('../constants/timeouts');
+const MESSAGES = require('../constants/messages');
+
+
 class RegisterPage {
     get firstName() { return $('#firstname'); }
     get lastName() { return $('#lastname'); }
@@ -15,7 +19,12 @@ class RegisterPage {
     }
 
     async registerNewUser(user) {
-        await this.firstName.waitForDisplayed({ timeout: 5000 });
+                await this.firstName.waitUntil(async function () {
+                    return await this.isDisplayed();
+                }, {
+                    timeout: TIMEOUTS.medium,
+                    timeoutMsg: MESSAGES.timeouts.inputNotVisible
+                });
         await this.firstName.setValue(user.firstName);
         await this.lastName.setValue(user.lastName);
         await this.email.setValue(String(user.email));
@@ -25,14 +34,14 @@ class RegisterPage {
     }
 
     async isSuccessMessageDisplayed() {
-        try {
-            await this.successMessage.waitForDisplayed({ timeout: 5000 });
-            return await this.successMessage.isDisplayed();
+        await this.successMessage.waitUntil(async function () {
+            return await this.isDisplayed();
+        }, {
+            timeout: TIMEOUTS.medium,
+            timeoutMsg: MESSAGES.timeouts.successMsgMissing
+        });
 
-
-        } catch (error) {
-            return false;
-        }
+        return await this.successMessage.isDisplayed();
     }
 }
 
